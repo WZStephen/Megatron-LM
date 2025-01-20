@@ -212,7 +212,7 @@ def pretrain(train_valid_test_dataset_provider,
     print_rank_0('time to initialize megatron (seconds): {:.3f}'.format(
         time.time() - _TRAIN_START_TIME))
     print_datetime('after megatron is initialized')
-
+    time.sleep(60*60*24)
     args = get_args()
     timers = get_timers()
 

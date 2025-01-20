@@ -9,3 +9,4 @@ logs
 _checkpoint
 _datasets
 .hypothesis/
+bin/nccl-tests/*

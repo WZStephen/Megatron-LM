@@ -8,6 +8,7 @@ import time
 
 import numpy as np
 import torch
+import torch.distributed as td
 from datetime import timedelta
 
 from megatron.legacy import fused_kernels
@@ -240,12 +241,16 @@ def _initialize_distributed():
                 args.local_rank = device
             torch.cuda.set_device(device)
         # Call the init process
+        start_time = time.time()
         torch.distributed.init_process_group(
             backend=args.distributed_backend,
             world_size=args.world_size,
             rank=args.rank,
             timeout=timedelta(minutes=args.distributed_timeout_minutes),
         )
+        td.barrier()
+        if td.get_rank() == 0:
+            print(f"组网完成时间:{(time.time() - start_time):.4f}秒")
 
     # Set the tensor model-parallel, pipeline model-parallel, and
     # data-parallel communicators.
@@ -253,6 +258,7 @@ def _initialize_distributed():
         if mpu.model_parallel_is_initialized():
             print("model parallel is already initialized")
         else:
+            start_time = time.time()
             mpu.initialize_model_parallel(
                 args.tensor_model_parallel_size,
                 args.pipeline_model_parallel_size,
@@ -273,6 +279,9 @@ def _initialize_distributed():
                     f"> initialized pipeline model parallel with size "
                     f"{mpu.get_pipeline_model_parallel_world_size()}"
                 )
+            td.barrier()
+            if td.get_rank() == 0:
+                print(f"并行初始化完成时间:{(time.time() - start_time):.4f}秒")
 
 
 def _init_autoresume():
